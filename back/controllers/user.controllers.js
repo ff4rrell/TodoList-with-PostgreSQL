@@ -1,5 +1,19 @@
 const clientPSQL = require("../db");
 
+const setQuery = (query) => {
+  const temp = clientPSQL
+    .query(query.text, query.array)
+    .then((res) => {
+      const rows = res.rows;
+      return rows[0];
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+
+return temp
+};
+
 class UserController {
   async createUser(req, res) {
     const { name, nickname } = req.body;
@@ -19,13 +33,14 @@ class UserController {
           console.log(err);
         });
       res.send(newUser);
-    }else{
-        res.send("Table not created successfully!");
+    } else {
+      res.send("Table not created successfully!");
     }
   }
 
   async getUsers(req, res) {
     const query = `SELECT * FROM users`;
+
     const users = await clientPSQL
       .query(query)
       .then((res) => {
@@ -44,32 +59,16 @@ class UserController {
       text: `SELECT * FROM users WHERE id = $1`,
       array: [id],
     };
-    const user = await clientPSQL
-      .query(query.text, query.array)
-      .then((res) => {
-        const rows = res.rows;
-        return rows[0];
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const user = await setQuery(query);
     res.send(user || `not find`);
   }
   async updateUserById(req, res) {
     const { name, nickname, id } = req.body;
     const query = {
-      text: `UPDATE users set name = $1, nickname = $2 WHERE id = $3 RETURNING *`,
+      text: `UPDATE users SET name = $1, nickname = $2 WHERE id = $3 RETURNING *`,
       array: [name, nickname, id],
     };
-    const user = await clientPSQL
-      .query(query.text, query.array)
-      .then((res) => {
-        const rows = res.rows;
-        return rows[0];
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const user = await setQuery(query);
     res.send(user || `not find`);
   }
   async deleteUserById(req, res) {
@@ -79,15 +78,7 @@ class UserController {
       array: [id],
     };
 
-    const user = await clientPSQL
-      .query(query.text, query.array)
-      .then((res) => {
-        const rows = res.rows;
-        return rows[0];
-      })
-      .catch((err) => {
-        console.log(err);
-      });
+    const user = await setQuery(query)
 
     res.send(user);
   }
